@@ -208,6 +208,9 @@ target_link_libraries(base_teleop_joy ${catkin_LIBRARIES})
 add_executable(shutdown_controller src/shutdown_controller.cpp)
 target_link_libraries(shutdown_controller ${catkin_LIBRARIES})
 
+add_executable(shutdown_controller_joy src/shutdown_controller_joy.cpp)
+target_link_libraries(shutdown_controller_joy ${catkin_LIBRARIES})
+
 add_executable(useless_planner src/useless_planner.cpp)
 target_link_libraries(useless_planner ${catkin_LIBRARIES})
 
