@@ -17,6 +17,9 @@ class BaseController
 public:
 	BaseController();
 
+	//void SetMaximumAcceleration(double acc);
+	//void SetMaximumVelocity(double vel);
+
 private:
 	void CmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg);
 	void TimerCallback(const ros::TimerEvent& event);
@@ -39,12 +42,26 @@ private:
 
 	double lastTarget[3];// = {0.0, 0.0, 0.0};
 	std_msgs::Int16MultiArray motorCmdVel_msg;
+
+	static constexpr double WheelDiameter = 0.100; // in metre
+	static constexpr double MachineRadius = 0.500; // in metre
+	static constexpr double VelocityCoefficient = 20.0 / (M_PI * WheelDiameter);
+
 };
 
 BaseController::BaseController(void)
 {
-	this->MaximumAcceleration = 100;
-	this->MaximumVelocity = 80;
+	auto _nh = ros::NodeHandle("~");
+	this->MaximumAcceleration = 100.0;
+	this->MaximumVelocity = 50.0;
+
+	_nh.getParam("motor_max_acc", this->MaximumAcceleration);
+
+	ROS_INFO("motor_max_acc : %f", this->MaximumAcceleration);
+
+	_nh.param("motor_max_vel", this->MaximumVelocity, 50.0);
+
+	ROS_INFO("motor_max_vel : %f", this->MaximumVelocity);
 
 	cmdVel_sub = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 10, &BaseController::CmdVelCallback, this);
 
@@ -79,21 +96,31 @@ void BaseController::CalcWheelSpeed(double actualDt)
 {
 	double t[3];
 
-	t[0] = (targetVelX * 1)					 	+ 										+ targetRotZ;
-	t[1] = (targetVelX * cos( 2 * M_PI / 3)) 	+ (targetVelY * sin( 2 * M_PI / 3)) 	+ targetRotZ;
-	t[2] = (targetVelX * cos(-2 * M_PI / 3)) 	+ (targetVelY * sin(-2 * M_PI / 3)) 	+ targetRotZ;
+	// To comply with REP-103, use x-front, y-left, z-up coordinate frame.
+	// REP-103, says that yaw angle value should INCREASE when you rotate the robot COUNTER-CLOCKWISE.
 
-	double k[3] = { 1.0, 1.0, 1.0 };
+	t[0] = -(									  (targetVelY * 1)						+ (targetRotZ * MachineRadius)) * VelocityCoefficient;
+	t[1] = -((targetVelX * sin( 2 * M_PI / 3))	+ (targetVelY * cos( 2 * M_PI / 3)) 	+ (targetRotZ * MachineRadius)) * VelocityCoefficient;
+	t[2] = -((targetVelX * sin(-2 * M_PI / 3))	+ (targetVelY * cos(-2 * M_PI / 3)) 	+ (targetRotZ * MachineRadius)) * VelocityCoefficient;
+
+	double _k = 1.0;
 
 	for(int i = 0; i < 3; i++)
 	{
-		//if(fabsf(t[i]) > this->MaximumVelocity)
+		auto _a = fabs(t[i]);
+
+		//if(_a > this->MaximumVelocity)
 		//{
-			k[i] = this->MaximumVelocity / fabs(t[i]);
+			if(_a * _k > this->MaximumVelocity)
+			{
+				_k = this->MaximumVelocity / _a;
+			}
+			//k[i] = this->MaximumVelocity / fabs(t[i]);
 		//}
 	}
 
-	double _k = std::min({k[0], k[1], k[2], 1.0});
+
+	//double _k = std::min({k[0], k[1], k[2], 1.0});
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -104,26 +131,24 @@ void BaseController::CalcWheelSpeed(double actualDt)
 
 	float maxVelDelta = this->MaximumAcceleration * actualDt;
 
-	k[0] = 1.0;
-	k[1] = 1.0;
-	k[2] = 1.0;
-	//k = { 1.0f, 1.0f, 1.0f };
+	_k = 1.0;
 
 	for(int i = 0; i < 3; i++)
 	{
-		//float diffabs = fabsf(t[i] - lastTarget[i]);
+		float diffabs = fabsf(t[i] - lastTarget[i]);
 
-		//if(acc < diffabs && (acc / diffabs) < k[i])
-		//{
-			k[i] = maxVelDelta / fabs(t[i] - lastTarget[i]);
-		//}
+		if(diffabs * _k > maxVelDelta)
+		{
+			_k = maxVelDelta / diffabs;
+		}
 	}
 
-	_k = std::min({k[0], k[1], k[2], 1.0});
+	//_k = std::min({k[0], k[1], k[2], 1.0});
 
 	for(int i = 0; i < 3; i++)
 	{
 		t[i] = lastTarget[i] + ((t[i] - lastTarget[i]) * _k);
+
 	}
 
 	this->motorCmdVel_msg.data.clear();
@@ -141,6 +166,8 @@ int main(int argc, char** argv)
 
 	BaseController *baseController = new BaseController();
 	ROS_INFO("base_controller node has started.");
+
+
 
 	ros::spin();
 	ROS_INFO("base_controller node has been terminated.");
