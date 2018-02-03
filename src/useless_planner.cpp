@@ -51,6 +51,9 @@ private:
 	double acc_lim_lin;
 	double acc_lim_ang;
 
+	double jerk_lim_lin;
+	double jerk_lim_ang;
+
 	double base_vel_k_lin;
 	double base_vel_k_ang;
 
@@ -120,6 +123,9 @@ UselessPlanner::UselessPlanner(void)
 	private_nh.param("acc_lim_lin", this->acc_lim_lin, 1.0);
 	private_nh.param("acc_lim_ang", this->acc_lim_ang, 1.0);
 
+	private_nh.param("jerk_lim_lin", this->jerk_lim_lin, 1.0);
+	private_nh.param("jerk_lim_ang", this->jerk_lim_ang, 1.0);
+
 	private_nh.param("base_vel_k_lin", this->base_vel_k_lin, 2.0);
 	private_nh.param("base_vel_k_ang", this->base_vel_k_ang, 0.5);
 
@@ -146,72 +152,98 @@ UselessPlanner::UselessPlanner(void)
 	goal_reached_pub = nh.advertise<std_msgs::Bool>("goal_reached", 1);
 	cmd_vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 
+	//path_pub = nh.advertise<nav_msgs::Path>("target_path", 1, true);
+
+	control_tim = nh.createTimer(ros::Duration(0.05), &UselessPlanner::TimerCallback, this);
+
+
+#if 1
+
 	path_pub = nh.advertise<nav_msgs::Path>("target_path", 1, true);
-
-	control_tim = nh.createTimer(ros::Duration(0.02), &UselessPlanner::TimerCallback, this);
-
 
 	target_path.header.frame_id = "map";
 	target_path.header.stamp = ros::Time::now();
 
-	std::vector<geometry_msgs::PoseStamped> _poses(50);
+	std::vector<geometry_msgs::PoseStamped> _poses;
 	//_poses.clear();
 
 	double x = 0.0;
 	double y = 0.0;
-	//geometry_msgs::PoseStamped _pose;
+
+	geometry_msgs::PoseStamped _pose;
 
 	//_pose.header.frame_id = "map";
 	//_pose.header.stamp = ros::Time::now();
 
 
-	int i = 0;
+	_pose.header.frame_id = "map";
+	_pose.header.stamp = ros::Time::now();
 
-	for(; i < 20; i++)
-	{
-		_poses.at(i).header.frame_id = "map";
-		_poses.at(i).header.stamp = ros::Time::now();
+	_pose.pose.position.x = 0.0;
+	_pose.pose.position.y = 0.0;
+	_pose.pose.orientation.z = 0;
+	_pose.pose.orientation.w = 1;
 
-		_poses.at(i).pose.position.x = x;
-		_poses.at(i).pose.position.y = y;
-		_poses.at(i).pose.orientation.z = 1;
-		_poses.at(i).pose.orientation.w = 0;
+	_poses.push_back(_pose);
 
-		x += 0.1;
-	}
 
-	//while(y < 1.0)
-	for(; i < 30; i++)
-	{
-		_poses.at(i).header.frame_id = "map";
-		_poses.at(i).header.stamp = ros::Time::now();
+	_pose.header.frame_id = "map";
+	_pose.header.stamp = ros::Time::now();
 
-		_poses.at(i).pose.position.x = x;
-		_poses.at(i).pose.position.y = y;
-		_poses.at(i).pose.orientation.z = 1;
-		_poses.at(i).pose.orientation.w = 0;
+	_pose.pose.position.x = 2.0;
+	_pose.pose.position.y = 0.0;
+	_pose.pose.orientation.z = 1;
+	_pose.pose.orientation.w = 0;
 
-		x += 0.1;
-		y += 0.1;
-	}
+	_poses.push_back(_pose);
 
-	//while(y < 4.0)
-	for(; i < 50; i++)
-	{
-		_poses.at(i).header.frame_id = "map";
-		_poses.at(i).header.stamp = ros::Time::now();
+	_pose.header.frame_id = "map";
+	_pose.header.stamp = ros::Time::now();
 
-		_poses.at(i).pose.position.x = x;
-		_poses.at(i).pose.position.y = y;
-		_poses.at(i).pose.orientation.z = 1;
-		_poses.at(i).pose.orientation.w = 0;
+	_pose.pose.position.x = 3.0;
+	_pose.pose.position.y = 1.0;
+	_pose.pose.orientation.z = 1;
+	_pose.pose.orientation.w = 0;
 
-		y += 0.1;
-	}
+	_poses.push_back(_pose);
 
+	_pose.header.frame_id = "map";
+	_pose.header.stamp = ros::Time::now();
+
+	_pose.pose.position.x = 3.0;
+	_pose.pose.position.y = 3.0;
+	_pose.pose.orientation.z = 1;
+	_pose.pose.orientation.w = 0;
+
+	_poses.push_back(_pose);
+
+	_pose.header.frame_id = "map";
+	_pose.header.stamp = ros::Time::now();
+
+	_pose.pose.position.x = 2.0;
+	_pose.pose.position.y = 2.0;
+	_pose.pose.orientation.z = 0;
+	_pose.pose.orientation.w = 1;
+
+	_poses.push_back(_pose);
+
+	_pose.pose.position.x = 1.0;
+	_pose.pose.position.y = 1.0;
+	_pose.pose.orientation.z = 0;
+	_pose.pose.orientation.w = 1;
+
+	_poses.push_back(_pose);
+
+	_pose.pose.position.x = 0.0;
+	_pose.pose.position.y = 0.0;
+	_pose.pose.orientation.z = 0;
+	_pose.pose.orientation.w = 1;
+
+	_poses.push_back(_pose);
 
 	target_path.poses = _poses;
 	path_pub.publish(target_path);
+#endif
 }
 
 void UselessPlanner::PathCallback(const nav_msgs::Path::ConstPtr& msg)
@@ -264,7 +296,14 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	}
 
 	geometry_msgs::PoseStamped target_pose;
-	double vel_world_x, vel_world_y, vel_z;
+	//double vel_world_x, vel_world_y;
+	double vel_z;
+	double vel_t, vel_r, theta;
+	double pose_delta_world_x;
+	double pose_delta_world_y;
+
+	double dt = event.current_real.toSec() - event.last_real.toSec();
+	double acc_max = this->acc_lim_lin * dt / 1.5;
 
 	while(1)
 	{
@@ -272,82 +311,200 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 
 		target_pose = this->target_path.poses.at(this->target_index);
 
-		vel_world_x = (target_pose.pose.position.x - this->last_pose_msg.x);
-		vel_world_y = (target_pose.pose.position.y - this->last_pose_msg.y);
+		//vel_world_x = (target_pose.pose.position.x - this->last_pose_msg.x);
+		//vel_world_y = (target_pose.pose.position.y - this->last_pose_msg.y);
+		pose_delta_world_x = (target_pose.pose.position.x - this->last_pose_msg.x);
+		pose_delta_world_y = (target_pose.pose.position.y - this->last_pose_msg.y);
+		//pose_delta_world_x -= this->cmd_vel_msg.linear.x;
+		//pose_delta_world_y -= this->cmd_vel_msg.linear.y;
+
+		pose_delta_world_x += ( (this->cmd_vel_msg.linear.x * cos(this->last_pose_msg.theta)) - (this->cmd_vel_msg.linear.y * sin(this->last_pose_msg.theta)) ) * dt;
+		pose_delta_world_y += ( (this->cmd_vel_msg.linear.x * sin(this->last_pose_msg.theta)) + (this->cmd_vel_msg.linear.y * cos(this->last_pose_msg.theta)) ) * dt;
+		//pose_delta_world_y += ((this->cmd_vel_msg.linear.y * dt;
+
+		//double vel_norm = hypot(vel_world_x, vel_world_y);
+
+		// distance from origin
+		double r = hypot(pose_delta_world_x, pose_delta_world_y);
+		// angle from origin
+		theta = this->last_pose_msg.theta - atan2(-pose_delta_world_x, pose_delta_world_y);
+		theta += this->cmd_vel_msg.angular.z * dt;
+
+
+		vel_t = +( (cmd_vel_msg.linear.x * cos(theta)) - (cmd_vel_msg.linear.y * sin(theta)) );
+		vel_r = -( (cmd_vel_msg.linear.x * sin(theta)) + (cmd_vel_msg.linear.y * cos(theta)) );
+
 		vel_z = (getYawFromQuat(target_pose.pose.orientation) - this->last_pose_msg.theta);
 
+		// 旋回方向最適化
 		if(vel_z > M_PI)
 		{
 			vel_z -= (2 * M_PI);
 		}
 
-		//if(vel_z < -M_PI)
-		//{
-		//	vel_z += (2 * M_PI);
-		//}
-
-		if(this->target_index < (this->target_path.poses.size() - 1)
-				&& (hypot(vel_world_x, vel_world_y) < this->lin_waypoint_tolerance))
+		if(this->target_index < (this->target_path.poses.size() - 1))
 		{
-			// waypoint reached
-			//this->goal_reached_msg.data = true;
-			//this->planning = false;
-			this->target_index++;
-			continue;
+			// current target is a waypoint, not the goal
+
+			if(r < this->lin_waypoint_tolerance)
+			{
+				// waypoint reached
+				this->target_index++;
+				continue;
+			}
+			/*
+			else
+			{
+				// waypoint, still tracking
+				// at full speed
+
+				if(vel_r > -this->vel_lim_lin + acc_max)
+				{
+					vel_r -= acc_max;
+				}
+				else if(vel_r < -this->vel_lim_lin - acc_max)
+				{
+					vel_r += acc_max;
+				}
+				else
+				{
+					vel_r = -this->vel_lim_lin;
+				}
+
+				break;
+			}
+			*/
+		}
+		else if(this->target_index == (this->target_path.poses.size() - 1))
+		{
+			// current target is the goal, not a waypoint.
+			// final approach
+			if( 	(r				< this->lin_goal_tolerance)
+				&&	(fabs(vel_z)	< this->ang_goal_tolerance))
+			{
+				// goal reached
+
+				this->planning = false;
+
+				this->cmd_vel_msg.linear.x = 0.0;
+				this->cmd_vel_msg.linear.y = 0.0;
+				this->cmd_vel_msg.angular.z = 0.0;
+				cmd_vel_pub.publish(cmd_vel_msg);
+
+				this->goal_reached_msg.data = true;
+				this->goal_reached_pub.publish(this->goal_reached_msg);
+				this->goal_reached_msg.data = false;
+
+				return;
+			}
+			else
+			{
+				// goal, final approach
+
+				// norm of current velocity
+				//double v_0 = hypot(cmd_vel_msg.linear.x, cmd_vel_msg.linear.y);
+
+
+			}
 		}
 
-		if(this->target_index == (this->target_path.poses.size() - 1)
-				&& (hypot(vel_world_x, vel_world_y) < this->lin_goal_tolerance)
-				&& (fabs(vel_z) < this->ang_goal_tolerance))
+		if(vel_r < 0 && 1.5 * vel_r * vel_r /  acc_lim_lin > r + (vel_r * dt))
 		{
-			// goal reached
-			this->planning = false;
-
-			this->cmd_vel_msg.linear.x = 0.0;
-			this->cmd_vel_msg.linear.y = 0.0;
-			this->cmd_vel_msg.angular.z = 0.0;
-			cmd_vel_pub.publish(cmd_vel_msg);
-
-			this->goal_reached_msg.data = true;
-			this->goal_reached_pub.publish(this->goal_reached_msg);
-
-			return;
+			vel_r += acc_max;
 		}
+		else if(vel_r > -this->vel_lim_lin + acc_max)
+		{
+			vel_r -= acc_max;
+		}
+		else if(vel_r < -this->vel_lim_lin - acc_max)
+		{
+			vel_r += acc_max;
+		}
+		else
+		{
+			vel_r = -this->vel_lim_lin;
+		}
+
+		//double _r = -cos(this->cmd_vel_msg.angular.z * dt / 2);
+
+		if(vel_t > acc_max)
+		{
+			vel_t -= acc_max;
+		}
+		else if(vel_t < -acc_max)
+		{
+			vel_t += acc_max;
+		}
+		else
+		{
+			vel_t = 0;
+		}
+		vel_t = 0;
 
 		this->goal_reached_msg.data = false;
 		//this->goal_reached_pub.publish(this->goal_reached_msg);
 		break;
 	}
 
-	//
-
-	vel_world_x *= this->base_vel_k_lin;
-	vel_world_y *= this->base_vel_k_lin;
+	// 目標がウェイポイントのとき，並進の速度は制御せず，向きだけ決める．速度は最大．かな？
+	// 回転は常に制御したほうがいいと思う．
 	vel_z *= this->base_vel_k_ang;
-
-	double vel_norm = hypot(vel_world_x, vel_world_y);
-	if(vel_norm > this->vel_lim_lin)
-	{
-		double r = this->vel_lim_lin / vel_norm;
-		vel_world_x *= r;
-		vel_world_y *= r;
-	}
-
-	double yaw = this->last_pose_msg.theta;
-	double vel_x = (vel_world_x * cos(-yaw)) - (vel_world_y * sin(-yaw));
-	double vel_y = (vel_world_x * sin(-yaw)) + (vel_world_y * cos(-yaw));
-
-	this->cmd_vel_msg.linear.x = vel_x;
-	this->cmd_vel_msg.linear.y = vel_y;
 
 	double ang_norm = fabs(vel_z);
 	if(ang_norm > this->vel_lim_ang)
 	{
-		double r = this->vel_lim_ang / ang_norm;
-		vel_z *= r;
+		double _r = this->vel_lim_ang / ang_norm;
+		vel_z *= _r;
 	}
 
-	this->cmd_vel_msg.angular.z = vel_z;//vel_z;
+	double acc_z = vel_z - cmd_vel_msg.angular.z;
+	double acc_rot_norm = fabs(acc_z);
+	if(acc_rot_norm > (this->acc_lim_ang * dt))
+	{
+		double _r = (this->acc_lim_ang * dt) / acc_rot_norm;
+		acc_z *= _r;
+	}
+
+	//pose_delta_world_x -= this->cmd_vel_msg.linear.x * dt;
+	//pose_delta_world_y -= this->cmd_vel_msg.linear.y * dt;
+
+	// angle from origin
+	//theta = this->last_pose_msg.theta - atan2(-pose_delta_world_x, pose_delta_world_y);
+	//theta += this->cmd_vel_msg.angular.z * dt;
+
+	double vel_x = +(vel_t * cos(theta)) - (vel_r * sin(theta));
+	double vel_y = -(vel_t * sin(theta)) - (vel_r * cos(theta));
+
+	double vel_norm = hypot(vel_x, vel_y);
+	if(vel_norm > this->vel_lim_lin)
+	{
+		double _r = this->vel_lim_lin / vel_norm;
+		vel_x *= _r;
+		vel_y *= _r;
+	}
+
+	// accel. limit
+
+
+	double acc_x = vel_x - cmd_vel_msg.linear.x;
+	double acc_y = vel_y - cmd_vel_msg.linear.y;
+	double acc_trans_norm = hypot(acc_x, acc_y);
+	if(acc_trans_norm > acc_max)
+	{
+		double _r = acc_max / acc_trans_norm;
+		acc_x *= _r;
+		acc_y *= _r;
+	}
+
+	// TODO: JERK limit
+
+	this->cmd_vel_msg.linear.x += acc_x;
+	this->cmd_vel_msg.linear.y += acc_y;
+
+	//this->cmd_vel_msg.linear.x = vel_x;
+	//this->cmd_vel_msg.linear.y = vel_y;
+
+	this->cmd_vel_msg.angular.z += acc_z;
 
 	cmd_vel_pub.publish(cmd_vel_msg);
 }
