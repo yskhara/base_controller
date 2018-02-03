@@ -28,10 +28,6 @@ private:
 	double MaximumAcceleration;
 	double MaximumVelocity;
 
-	bool InvertX = false;
-	bool InvertY = false;
-	bool InvertZ = false;
-
 	ros::NodeHandle nh;
 
 	ros::Subscriber cmdVel_sub;
@@ -67,10 +63,6 @@ BaseController::BaseController(void)
 
 	ROS_INFO("motor_max_vel : %f", this->MaximumVelocity);
 
-	_nh.param("invert_x", this->InvertX, false);
-	_nh.param("invert_y", this->InvertY, false);
-	_nh.param("invert_z", this->InvertZ, false);
-
 	cmdVel_sub = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 10, &BaseController::CmdVelCallback, this);
 
 	motorCmdVel_pub = nh.advertise<std_msgs::Int16MultiArray>("motor_cmd_vel", 1);
@@ -91,19 +83,6 @@ void BaseController::CmdVelCallback(const geometry_msgs::Twist::ConstPtr& msg)
 	this->targetVelY = static_cast<double>(msg->linear.y);
 	this->targetRotZ = static_cast<double>(msg->angular.z);
 	//this->targetTime = msg->header.stamp.toSec();
-
-	if(this->InvertX)
-	{
-		this->targetVelX *= -1;
-	}
-	if(this->InvertY)
-	{
-		this->targetVelY *= -1;
-	}
-	if(this->InvertZ)
-	{
-		this->targetRotZ *= -1;
-	}
 }
 
 void BaseController::TimerCallback(const ros::TimerEvent& event)
