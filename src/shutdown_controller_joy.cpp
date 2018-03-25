@@ -9,8 +9,16 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/UInt16.h>
 #include <sensor_msgs/Joy.h>
 
+
+enum class BaseStatus : uint16_t
+{
+	shutdown			= 0x0000,
+	reset				= 0x0001,
+	operational			= 0x0010,
+};
 
 class ShutdownController
 {
@@ -18,20 +26,25 @@ public:
 	ShutdownController();
 
 private:
-	void BaseShutdownCallback(const std_msgs::Bool::ConstPtr& msg);
+	void baseStatusCallback(const std_msgs::UInt16::ConstPtr& msg);
+	//void BaseShutdownCallback(const std_msgs::Bool::ConstPtr& msg);
 	void JoyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 	void TimerCallback(const ros::TimerEvent& event);
 
 	ros::NodeHandle nh;
 
-	ros::Subscriber baseShutdown_sub;
 	ros::Subscriber joy_sub;
+
+	ros::Subscriber base_status_sub;
 
 	ros::Publisher shutdown_pub;
 
 	ros::Timer pub_tim;
 
 	std_msgs::Bool shutdown_msg;
+
+	BaseStatus base_last_status = BaseStatus::shutdown;
+	ros::Time base_last_status_time;
 
 	int sd_recovering = -1;
 
@@ -44,7 +57,7 @@ int ShutdownController::ButtonStart = 7;
 
 ShutdownController::ShutdownController(void)
 {
-	baseShutdown_sub = nh.subscribe<std_msgs::Bool>("base/shutdown", 10, &ShutdownController::BaseShutdownCallback, this);
+	base_status_sub = nh.subscribe<std_msgs::UInt16>("base/status", 10, &ShutdownController::baseStatusCallback, this);
 	joy_sub = nh.subscribe<sensor_msgs::Joy>("joy", 10, &ShutdownController::JoyCallback, this);
 
 	shutdown_pub = nh.advertise<std_msgs::Bool>("shutdown", 1);
@@ -57,54 +70,52 @@ ShutdownController::ShutdownController(void)
 	nh.getParam("ButtonStart", ButtonStart);
 }
 
-void ShutdownController::BaseShutdownCallback(const std_msgs::Bool::ConstPtr& msg)
+void ShutdownController::baseStatusCallback(const std_msgs::UInt16::ConstPtr& msg)
 {
-	if(msg->data)
+	BaseStatus status = (BaseStatus)msg->data;
+
+	switch(status)
 	{
-		this->shutdown_msg.data = true;
+	case BaseStatus::shutdown:
+		//if(this->base_last_status != BaseStatus::shutdown)
+		//{
+			this->shutdown_msg.data = true;
+		//}
+		break;
+
+	default:
+		break;
 	}
+
+	base_last_status = status;
+	base_last_status_time = ros::Time::now();
 }
 
 void ShutdownController::JoyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
 	bool start = joy->buttons[ButtonStart];
-	bool select = joy->buttons[ButtonSelect];
+	//bool select = joy->buttons[ButtonSelect];
 
-	if(start || select)
+	if(start)
 	{
 		if(!this->shutdown_msg.data)
 		{
 			this->shutdown_msg.data = true;
 		}
-
-		if(start && select)
+		else if(sd_recovering == -1)
 		{
-			if(this->shutdown_msg.data && sd_recovering < 0)
-			{
-				sd_recovering = 10;
-			}
-			//else if(!this->shutdown_msg.data && sd_)
+			sd_recovering = 10;
 		}
-		else
-		{
-			if(sd_recovering != 0)
-			{
-				// if not just recovered
-				this->shutdown_msg.data = true;
-				sd_recovering = -1;
-			}
-		}
+		//else if(!this->shutdown_msg.data && sd_)
 	}
 	else
 	{
-		/*
 		if(sd_recovering > 0)
 		{
 			// if not just recovered
 			this->shutdown_msg.data = true;
-			//sd_recovering = -1;
 		}
-		*/
+
 		sd_recovering = -1;
 	}
 }

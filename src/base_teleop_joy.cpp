@@ -47,8 +47,8 @@ void BaseTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
   geometry_msgs::Twist twist;
 
-  twist.linear.x = 1.0 * joy->axes[LeftThumbY];
-  twist.linear.y = -1.0 * joy->axes[LeftThumbX];
+  twist.linear.x = 5.0 * joy->axes[LeftThumbY];
+  twist.linear.y = 5.0 * joy->axes[LeftThumbX];
   twist.angular.z = 1.5 * joy->axes[RightThumbX];
 
   vel_pub_.publish(twist);

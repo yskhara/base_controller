@@ -37,20 +37,14 @@ private:
 	void TimerCallback(const ros::TimerEvent& event);
 	//void CalcWheelSpeed(double actualDt);
 
-	inline double getYawFromQuat(const geometry_msgs::Quaternion& quat)
+	double getYawFromQuat(const geometry_msgs::Quaternion& quat)
 	{
 		tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
-		return tf::getYaw(q);
-	}
+		tf::Matrix3x3 m(q);
+		double roll, pitch, yaw;
+		m.getRPY(roll, pitch, yaw);
 
-	geometry_msgs::Pose2D pose_to_2d(geometry_msgs::Pose pose)
-	{
-		geometry_msgs::Pose2D r;
-		r.x = pose.position.x;
-		r.y = pose.position.y;
-		r.theta = getYawFromQuat(pose.orientation);
-
-		return r;
+		return yaw;
 	}
 
 	double vel_lim_lin;
@@ -62,8 +56,7 @@ private:
 	double jerk_lim_lin;
 	double jerk_lim_ang;
 
-	double base_vel_k_tan;
-	double base_vel_k_nor;
+	double base_vel_k_lin;
 	double base_vel_k_ang;
 
 	double lin_goal_tolerance;
@@ -137,12 +130,10 @@ UselessPlanner::UselessPlanner(void)
 	private_nh.param("jerk_lim_lin", this->jerk_lim_lin, 1.0);
 	private_nh.param("jerk_lim_ang", this->jerk_lim_ang, 1.0);
 
-	private_nh.param("base_vel_k_tan", this->base_vel_k_tan, 1.0);
-	private_nh.param("base_vel_k_nor", this->base_vel_k_nor, 2.0);
+	private_nh.param("base_vel_k_lin", this->base_vel_k_lin, 2.0);
 	private_nh.param("base_vel_k_ang", this->base_vel_k_ang, 0.5);
 
-	ROS_INFO("base_vel_k_tan : %f", this->base_vel_k_tan);
-	ROS_INFO("base_vel_k_nor : %f", this->base_vel_k_nor);
+	ROS_INFO("base_vel_k_lin : %f", this->base_vel_k_lin);
 	ROS_INFO("base_vel_k_ang : %f", this->base_vel_k_ang);
 
 	private_nh.param("goal_tolerance_lin", this->lin_goal_tolerance, 0.05);					// 5 centimetre
@@ -264,17 +255,12 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 		return;
 	}
 
-	geometry_msgs::Pose2D target_pose, target_pose_prev, goal_pose;
-	double vel_norm;
+	geometry_msgs::PoseStamped target_pose;
+	double vel_world_x, vel_world_y, vel_norm;
 	double vel_z;
 	//double vel_t, vel_r, theta;
 	//double pose_delta_world_x;
 	//double pose_delta_world_y;
-
-
-	double path_angle, target_angle, angle_diff;
-	double vel_tan, vel_nor;
-	double diff_tan, diff_nor;
 
 	double dt = event.current_real.toSec() - event.last_real.toSec();
 	double acc_max = this->acc_lim_lin * dt / 1.5;
@@ -301,44 +287,17 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	this->last_pose_msg.y = base_link.getOrigin().y();
 	this->last_pose_msg.theta = tf::getYaw(base_link.getRotation());
 
-	goal_pose = pose_to_2d(this->target_path.poses.at(this->target_path.poses.size() - 1).pose);
-
 	while(1)
 	{
 		// 到達判定
 
-		target_pose = pose_to_2d(this->target_path.poses.at(this->target_index).pose);
-		if(this->target_index == 0)
-		{
-			target_pose_prev = this->last_pose_msg;
-		}
-		else
-		{
-			target_pose_prev = pose_to_2d(this->target_path.poses.at(this->target_index - 1).pose);
-		}
+		target_pose = this->target_path.poses.at(this->target_index);
 
-		double vel_world_x = target_pose.x - this->last_pose_msg.x;
-		double vel_world_y = target_pose.y - this->last_pose_msg.y;
-
-		vel_z = goal_pose.theta - this->last_pose_msg.theta;
-
-		path_angle = atan2(target_pose.y - target_pose_prev.y, target_pose.x - target_pose_prev.x);
-		target_angle = atan2(vel_world_y, vel_world_x);
+		vel_world_x = (target_pose.pose.position.x - this->last_pose_msg.x);
+		vel_world_y = (target_pose.pose.position.y - this->last_pose_msg.y);
 		vel_norm = hypot(vel_world_x, vel_world_y);
 
-		angle_diff = target_angle - path_angle;
-
-		diff_tan = vel_norm * cos(angle_diff);
-		diff_nor = vel_norm * sin(angle_diff);
-		vel_tan = base_vel_k_tan * diff_tan;
-		vel_nor = base_vel_k_nor * diff_nor;
-
-		double cost = fabs(15 * diff_nor);
-		// 経路から離れた分のコスト
-		if(cost > 1)
-		{
-			vel_tan /= cost;
-		}
+		vel_z = (getYawFromQuat(target_pose.pose.orientation) - this->last_pose_msg.theta);
 
 		// 旋回方向最適化
 		if(vel_z > M_PI)
@@ -359,7 +318,16 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 			else
 			{
 				// waypoint, still tracking
+				// at full speed
 
+				//double _r = this->vel_lim_lin / vel_norm;
+				//vel_world_x *= _r;
+				//vel_world_y *= _r;
+
+				vel_world_x *= this->base_vel_k_lin;
+				vel_world_y *= this->base_vel_k_lin;
+
+				//break;
 			}
 		}
 		else if(this->target_index == (this->target_path.poses.size() - 1))
@@ -390,6 +358,10 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 			{
 				// goal, final approach
 
+				//double target_vel = sqrt(2 * this->acc_lim_lin * vel_norm) - (acc_max * 3);
+				//double _r = fabs(target_vel) / vel_norm;
+				vel_world_x *= this->base_vel_k_lin;
+				vel_world_y *= this->base_vel_k_lin;
 			}
 		}
 
@@ -401,15 +373,6 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	// 目標がウェイポイントのとき，並進の速度は制御せず，向きだけ決める．速度は最大．かな？
 	// 回転は常に制御したほうがいいと思う．
 	vel_z *= this->base_vel_k_ang;
-
-	double cost = fabs(64.0 * diff_nor);
-	// 経路から離れた分のコスト
-	// 1/4 での半減期 0.5m
-	if(cost > 1)
-	{
-		vel_z /= cost;
-	}
-
 #if 0
 	/double vel_z_norm = fabs(vel_z);
 	if(vel_z_norm > 0.0000001)
@@ -441,9 +404,9 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	//theta = this->last_pose_msg.theta - atan2(-pose_delta_world_x, pose_delta_world_y);
 	//theta += this->cmd_vel_msg.angular.z * dt;
 
-	double theta = this->last_pose_msg.theta - path_angle;
-	double vel_x = +(vel_tan * cos(theta)) + (vel_nor * sin(theta));
-	double vel_y = -(vel_tan * sin(theta)) + (vel_nor * cos(theta));
+	double theta = this->last_pose_msg.theta;
+	double vel_x = +(vel_world_x * cos(theta)) + (vel_world_y * sin(theta));
+	double vel_y = -(vel_world_x * sin(theta)) + (vel_world_y * cos(theta));
 
 	vel_norm = hypot(vel_x, vel_y);
 
