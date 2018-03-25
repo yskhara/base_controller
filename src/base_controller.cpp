@@ -5,8 +5,6 @@
  *      Author: yusaku
  */
 
-// TODO: make separate nodes for 3 wheels, 4 wheels, etc...
-
 #include <ros/ros.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Int16MultiArray.h>
@@ -43,7 +41,7 @@ private:
 	double lastTarget[3];// = {0.0, 0.0, 0.0};
 	std_msgs::Int16MultiArray motorCmdVel_msg;
 
-	static constexpr double WheelDiameter = 0.100; // in metre
+	static constexpr double WheelDiameter = 0.127; // in metre
 	static constexpr double MachineRadius = 0.500; // in metre
 	static constexpr double VelocityCoefficient = 20.0 / (M_PI * WheelDiameter);
 
@@ -67,7 +65,7 @@ BaseController::BaseController(void)
 
 	motorCmdVel_pub = nh.advertise<std_msgs::Int16MultiArray>("motor_cmd_vel", 1);
 
-	control_tim = nh.createTimer(ros::Duration(0.02), &BaseController::TimerCallback, this);
+	control_tim = nh.createTimer(ros::Duration(0.05), &BaseController::TimerCallback, this);
 
 	targetVelX = targetVelY = targetRotZ = 0.0;
 
@@ -97,7 +95,7 @@ void BaseController::CalcWheelSpeed(double actualDt)
 	double t[3];
 
 	// To comply with REP-103, use x-front, y-left, z-up coordinate frame.
-	// REP-103, says that yaw angle value should INCREASE when you rotate the robot COUNTER-CLOCKWISE.
+	// REP-103 says that yaw angle value should INCREASE when you rotate the robot COUNTER-CLOCKWISE.
 
 	t[0] = -(									  (targetVelY * 1)						+ (targetRotZ * MachineRadius)) * VelocityCoefficient;
 	t[1] = -((targetVelX * sin( 2 * M_PI / 3))	+ (targetVelY * cos( 2 * M_PI / 3)) 	+ (targetRotZ * MachineRadius)) * VelocityCoefficient;
