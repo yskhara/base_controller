@@ -73,7 +73,7 @@ BaseController::BaseController(void)
 
 	motorCmdVel_pub = nh.advertise<std_msgs::Int16MultiArray>("motor_cmd_vel", 1);
 
-	control_tim = nh.createTimer(ros::Duration(0.05), &BaseController::TimerCallback, this);
+	control_tim = nh.createTimer(ros::Duration(1.0 / 40), &BaseController::TimerCallback, this);
 
 	targetVelX = targetVelY = targetRotZ = 0.0;
 

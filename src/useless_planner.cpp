@@ -167,7 +167,7 @@ UselessPlanner::UselessPlanner(void)
 
 	//path_pub = nh.advertise<nav_msgs::Path>("target_path", 1, true);
 
-	control_tim = nh.createTimer(ros::Duration(0.05), &UselessPlanner::TimerCallback, this);
+	control_tim = nh.createTimer(ros::Duration(1.0 / 40.0), &UselessPlanner::TimerCallback, this);
 
 
 #if 0
@@ -283,7 +283,7 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 
 	try
 	{
-		this->_tflistener.waitForTransform("/map", "base_link", ros::Time(0), ros::Duration(0.1));
+		this->_tflistener.waitForTransform("/map", "/base_link", ros::Time(0), ros::Duration(0.1));
 		this->_tflistener.lookupTransform("/map", "/base_link", ros::Time(0), base_link);
 	}
 	catch(...)
@@ -332,13 +332,6 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 		diff_nor = vel_norm * sin(angle_diff);
 		vel_tan = base_vel_k_tan * diff_tan;
 		vel_nor = base_vel_k_nor * diff_nor;
-
-		double cost = fabs(15 * diff_nor);
-		// 経路から離れた分のコスト
-		if(cost > 1)
-		{
-			vel_tan /= cost;
-		}
 
 		// 旋回方向最適化
 		if(vel_z > M_PI)
@@ -398,16 +391,38 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 		break;
 	}
 
+	// 経路から離れた分のコスト
+	// 半減値 200 mm
+	constexpr double _tan_half_value_diff_nor = 0.200;
+	constexpr double _tan_cost_coeff_diff_nor = 2.0 / _tan_half_value_diff_nor;
+	double tan_cost_diff_nor = fabs(_tan_cost_coeff_diff_nor * diff_nor);
+	if(tan_cost_diff_nor > 1)
+	{
+		vel_tan /= tan_cost_diff_nor;
+	}
+
 	// 目標がウェイポイントのとき，並進の速度は制御せず，向きだけ決める．速度は最大．かな？
 	// 回転は常に制御したほうがいいと思う．
 	vel_z *= this->base_vel_k_ang;
 
-	double cost = fabs(64.0 * diff_nor);
 	// 経路から離れた分のコスト
-	// 1/4 での半減期 0.5m
-	if(cost > 1)
+	// 半減値 30 mm
+	constexpr double _half_value_diff_nor = 0.030;
+	constexpr double _cost_coeff_diff_nor = 2.0 / _half_value_diff_nor;
+	double cost_diff_nor = fabs(_cost_coeff_diff_nor * diff_nor);
+	if(cost_diff_nor > 1)
 	{
-		vel_z /= cost;
+		vel_z /= cost_diff_nor;
+	}
+
+	// 目標値から遠いとき，急いで旋回する必要はない
+	// 半減値 3 m
+	constexpr double _half_value_diff_tan = 4.000;
+	constexpr double _cost_coeff_diff_tan = 2.0 / _half_value_diff_tan;
+	double cost_diff_tan = fabs(_cost_coeff_diff_tan * diff_tan);
+	if(cost_diff_tan > 1)
+	{
+		vel_z /= cost_diff_tan;
 	}
 
 #if 0
