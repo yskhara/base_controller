@@ -9,6 +9,10 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
 
+static constexpr int LeftThumbY = 1;
+static constexpr int LeftThumbX = 0;
+static constexpr int RightThumbX = 2;
+
 class BaseTeleop
 {
 public:
