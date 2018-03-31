@@ -56,8 +56,10 @@ private:
 	double vel_lim_lin;
 	double vel_lim_ang;
 
-	double acc_lim_lin;
-	double acc_lim_ang;
+	double accel_lim_lin;
+	double accel_lim_ang;
+	double deccel_lim_lin;
+	double deccel_lim_ang;
 
 	double jerk_lim_lin;
 	double jerk_lim_ang;
@@ -131,8 +133,12 @@ UselessPlanner::UselessPlanner(void)
 	ROS_INFO("vel_lim_lin : %f", this->vel_lim_lin);
 	ROS_INFO("vel_lim_ang : %f", this->vel_lim_ang);
 
-	private_nh.param("acc_lim_lin", this->acc_lim_lin, 1.0);
-	private_nh.param("acc_lim_ang", this->acc_lim_ang, 1.0);
+	private_nh.param("acc_lim_lin", this->accel_lim_lin, 1.0);
+	private_nh.param("acc_lim_ang", this->accel_lim_ang, 1.0);
+
+	// defaults to the same value as acc_lim
+	private_nh.param("dec_lim_lin", this->deccel_lim_lin, this->accel_lim_lin);
+	private_nh.param("dec_lim_ang", this->deccel_lim_ang, this->accel_lim_ang);
 
 	private_nh.param("jerk_lim_lin", this->jerk_lim_lin, 1.0);
 	private_nh.param("jerk_lim_ang", this->jerk_lim_ang, 1.0);
@@ -277,7 +283,7 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	double diff_tan, diff_nor;
 
 	double dt = event.current_real.toSec() - event.last_real.toSec();
-	double acc_max = this->acc_lim_lin * dt / 1.5;
+	double acc_max = this->accel_lim_lin * dt / 1.5;
 
 	tf::StampedTransform base_link;
 
@@ -320,7 +326,11 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 		double vel_world_x = target_pose.x - this->last_pose_msg.x;
 		double vel_world_y = target_pose.y - this->last_pose_msg.y;
 
+#if USE_GOAL_YAW
 		vel_z = goal_pose.theta - this->last_pose_msg.theta;
+#else
+		vel_z = target_pose.theta - this->last_pose_msg.theta;
+#endif
 
 		path_angle = atan2(target_pose.y - target_pose_prev.y, target_pose.x - target_pose_prev.x);
 		target_angle = atan2(vel_world_y, vel_world_x);
@@ -361,8 +371,8 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 			// final approach
 			if( 	(vel_norm														< this->lin_goal_tolerance)
 				&&	(fabs(vel_z)													< this->ang_goal_tolerance)
-				&&	(hypot(this->cmd_vel_msg.linear.x, this->cmd_vel_msg.linear.y)	< this->acc_lim_lin * dt)
-				&&	(abs(this->cmd_vel_msg.angular.z)								< this->acc_lim_ang * dt))
+				&&	(hypot(this->cmd_vel_msg.linear.x, this->cmd_vel_msg.linear.y)	< this->accel_lim_lin * dt)
+				&&	(abs(this->cmd_vel_msg.angular.z)								< this->accel_lim_ang * dt))
 			{
 				// goal reached
 
@@ -429,11 +439,13 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	/double vel_z_norm = fabs(vel_z);
 	if(vel_z_norm > 0.0000001)
 	{
-		double _r = fabs(sqrt(2 * this->acc_lim_ang * vel_z_norm) - (this->acc_lim_ang * dt)) / vel_z_norm;
+		double _r = fabs(sqrt(2 * this->accel_lim_ang * vel_z_norm) - (this->accel_lim_ang * dt)) / vel_z_norm;
 		vel_z *= _r;
 	}
 #endif
 
+
+	// limit angular velocity
 	double vel_z_norm = fabs(vel_z);
 	if(vel_z_norm > this->vel_lim_ang)
 	{
@@ -441,13 +453,32 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 		vel_z *= _r;
 	}
 
+#if 1
+	// limit angular acceleration
 	double acc_z = vel_z - cmd_vel_msg.angular.z;
 	double acc_rot_norm = fabs(acc_z);
-	if(acc_rot_norm > (this->acc_lim_ang * dt))
+	if(		(vel_z > 0 && acc_z >  (this->accel_lim_ang * dt))
+		||	(vel_z < 0 && acc_z < -(this->accel_lim_ang * dt)))
 	{
-		double _r = (this->acc_lim_ang * dt) / acc_rot_norm;
+		double _r = (this->accel_lim_ang * dt) / acc_rot_norm;
 		acc_z *= _r;
 	}
+	else if(	(vel_z > 0 && acc_z < -(this->deccel_lim_ang * dt))
+			||	(vel_z < 0 && acc_z >  (this->deccel_lim_ang * dt)))
+	{
+		double _r = (this->deccel_lim_ang * dt) / acc_rot_norm;
+		acc_z *= _r;
+	}
+#else
+	// limit angular acceleration
+	double acc_z = vel_z - cmd_vel_msg.angular.z;
+	double acc_rot_norm = fabs(acc_z);
+	if(acc_rot_norm > (this->accel_lim_ang * dt))
+	{
+		double _r = (this->accel_lim_ang * dt) / acc_rot_norm;
+		acc_z *= _r;
+	}
+#endif
 
 	//pose_delta_world_x -= this->cmd_vel_msg.linear.x * dt;
 	//pose_delta_world_y -= this->cmd_vel_msg.linear.y * dt;
@@ -490,9 +521,9 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	double acc_x = vel_x - cmd_vel_msg.linear.x;
 	double acc_y = vel_y - cmd_vel_msg.linear.y;
 	double acc_trans_norm = hypot(acc_x, acc_y);
-	if(acc_trans_norm > acc_lim_lin * dt)
+	if(acc_trans_norm > accel_lim_lin * dt)
 	{
-		double _r = acc_lim_lin * dt / acc_trans_norm;
+		double _r = accel_lim_lin * dt / acc_trans_norm;
 		acc_x *= _r;
 		acc_y *= _r;
 	}
