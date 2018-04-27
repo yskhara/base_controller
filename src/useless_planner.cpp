@@ -73,6 +73,8 @@ private:
 
 	double lin_waypoint_tolerance;
 
+	static constexpr double control_interval = 1 / 20.0;
+
 	bool planning = false;
 
 	//double MaximumVelocity;
@@ -173,7 +175,7 @@ UselessPlanner::UselessPlanner(void)
 
 	//path_pub = nh.advertise<nav_msgs::Path>("target_path", 1, true);
 
-	control_tim = nh.createTimer(ros::Duration(1.0 / 40.0), &UselessPlanner::TimerCallback, this);
+	control_tim = nh.createTimer(ros::Duration(control_interval), &UselessPlanner::TimerCallback, this);
 
 
 #if 0
@@ -417,7 +419,7 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 
 	// 経路から離れた分のコスト
 	// 半減値 30 mm
-	constexpr double _half_value_diff_nor = 0.030;
+	constexpr double _half_value_diff_nor = 0.050;
 	constexpr double _cost_coeff_diff_nor = 2.0 / _half_value_diff_nor;
 	double cost_diff_nor = fabs(_cost_coeff_diff_nor * diff_nor);
 	if(cost_diff_nor > 1)
@@ -479,6 +481,7 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 		acc_z *= _r;
 	}
 #endif
+	vel_z *= acc_z;
 
 	//pose_delta_world_x -= this->cmd_vel_msg.linear.x * dt;
 	//pose_delta_world_y -= this->cmd_vel_msg.linear.y * dt;
@@ -488,8 +491,24 @@ void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 	//theta += this->cmd_vel_msg.angular.z * dt;
 
 	double theta = this->last_pose_msg.theta - path_angle;
-	double vel_x = +(vel_tan * cos(theta)) + (vel_nor * sin(theta));
-	double vel_y = -(vel_tan * sin(theta)) + (vel_nor * cos(theta));
+	double tmp_x = +(vel_tan * cos(theta)) + (vel_nor * sin(theta));
+	double tmp_y = -(vel_tan * sin(theta)) + (vel_nor * cos(theta));
+
+	double vel_x;
+	double vel_y;
+	if(fabs(vel_z) > 0.000001)
+	{
+		double _ang = vel_z * control_interval;
+		double _k1 = sin(_ang) / (1 - cos(_ang));
+		double _k2 = _ang / 2.0;
+		vel_x = ((tmp_x * _k1) + tmp_y) * _k2;
+		vel_y = ((tmp_y * _k1) - tmp_x) * _k2;
+	}
+	else
+	{
+		vel_x = tmp_x;
+		vel_y = tmp_y;
+	}
 
 	vel_norm = hypot(vel_x, vel_y);
 

@@ -26,6 +26,11 @@ private:
   ros::Publisher vel_pub_;
   ros::Subscriber joy_sub_;
 
+  double max_lin;
+  double max_lin_turbo;
+  double max_ang;
+  double max_ang_turbo;
+
 	static int AxisLeftThumbX;
 	static int AxisLeftThumbY;
 	static int AxisRightThumbX;
@@ -51,24 +56,46 @@ BaseTeleop::BaseTeleop()
 	nh_.getParam("AxisRightThumbX", AxisRightThumbX);
 	nh_.getParam("ButtonRB", ButtonRB);
 
+
+	auto _nh = ros::NodeHandle("~");
+
+	_nh.param("max_lin", this->max_lin, 0.5);
+	_nh.param("max_lin_turbo", this->max_lin_turbo, 1.5);
+	_nh.param("max_ang", this->max_ang, M_PI);
+	_nh.param("max_ang_turbo", this->max_ang_turbo, 2 * M_PI);
 }
 
 void BaseTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
 	geometry_msgs::Twist twist;
 
+	double vel_x = joy->axes[AxisLeftThumbY];
+	double vel_y = joy->axes[AxisLeftThumbX];
+	double vel_z = joy->axes[AxisRightThumbX];
+
+	double vel_norm = hypot(vel_x, vel_y);
+	if(vel_norm > 1.0)
+	{
+		vel_x /= vel_norm;
+		vel_y /= vel_norm;
+	}
+
 	if (joy->buttons[ButtonRB] != 0)
 	{
-		twist.linear.x = 0.5 * joy->axes[AxisLeftThumbY];
-		twist.linear.y = -0.5 * joy->axes[AxisLeftThumbX];
-		twist.angular.z = 0.25 * joy->axes[AxisRightThumbX];
+		vel_x *= this->max_lin_turbo;
+		vel_y *= this->max_lin_turbo;
+		vel_z *= this->max_ang_turbo;
 	}
 	else
 	{
-		twist.linear.x = 5.0 * joy->axes[AxisLeftThumbY];
-		twist.linear.y = -5.0 * joy->axes[AxisLeftThumbX];
-		twist.angular.z = 3.0 * joy->axes[AxisRightThumbX];
+		vel_x *= this->max_lin;
+		vel_y *= this->max_lin;
+		vel_z *= this->max_ang;
 	}
+
+	twist.linear.x = vel_x;
+	twist.linear.y = vel_y;
+	twist.angular.z = vel_z;
 
 	vel_pub_.publish(twist);
 }
