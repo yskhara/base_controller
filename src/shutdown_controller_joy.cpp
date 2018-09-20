@@ -48,12 +48,12 @@ private:
 
 	int sd_recovering = -1;
 
-	static int ButtonSelect;
+	//static int ButtonSelect;
 	static int ButtonStart;
 };
 
-int ShutdownController::ButtonSelect = 6;
-int ShutdownController::ButtonStart = 7;
+//int ShutdownController::ButtonSelect = 6;
+int ShutdownController::ButtonStart = 11;
 
 ShutdownController::ShutdownController(void)
 {
@@ -66,7 +66,7 @@ ShutdownController::ShutdownController(void)
 
 	shutdown_msg.data = true;
 
-	nh.getParam("ButtonSelect", ButtonSelect);
+	//nh.getParam("ButtonSelect", ButtonSelect);
 	nh.getParam("ButtonStart", ButtonStart);
 }
 

@@ -40,7 +40,7 @@ private:
 int BaseTeleop::AxisLeftThumbX = 0;
 int BaseTeleop::AxisLeftThumbY = 1;
 int BaseTeleop::AxisRightThumbX = 2;
-int BaseTeleop::ButtonRB = 4;
+int BaseTeleop::ButtonRB = 7;
 
 BaseTeleop::BaseTeleop()
 {
@@ -59,10 +59,15 @@ BaseTeleop::BaseTeleop()
 
 	auto _nh = ros::NodeHandle("~");
 
-	_nh.param("max_lin", this->max_lin, 0.5);
-	_nh.param("max_lin_turbo", this->max_lin_turbo, 1.5);
+	_nh.param("max_lin", this->max_lin, 1.0);
+	_nh.param("max_lin_turbo", this->max_lin_turbo, this->max_lin);
 	_nh.param("max_ang", this->max_ang, M_PI);
-	_nh.param("max_ang_turbo", this->max_ang_turbo, 2 * M_PI);
+	_nh.param("max_ang_turbo", this->max_ang_turbo, this->max_ang);
+
+    ROS_INFO("max_lin: %lf", this->max_lin);
+    ROS_INFO("max_lin_turbo: %lf", this->max_lin_turbo);
+    ROS_INFO("max_ang: %lf", this->max_ang);
+    ROS_INFO("max_ang_turbo: %lf", this->max_ang_turbo);
 }
 
 void BaseTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)

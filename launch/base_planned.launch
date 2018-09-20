@@ -1,31 +1,31 @@
 <launch>
-	<!-- base controller -->
-	<node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
-	   <param name="motor_max_acc" value="125.0" />
-	   <param name="motor_max_vel" value="62.5" />
-	</node>
-	
-	<!-- joy teleop -->
-	<node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy"/>
-	
-	<node pkg="base_controller" type="shutdown_controller" name="sd_controller" />
-	
-	<!-- joy node -->
-	<node respawn="true" pkg="joy" type="joy_node" name="joy_node" >
-		<param name="dev" type="string" value="/dev/input/js0" />
-		<param name="deadzone" value="0.12" />
-	</node>
-	
-	<!-- base itself -->
-	<node pkg="rosserial_server" type="serial_node" name="base">
-<rosparam>
-port: /dev/ttyUSB0
-baud: 57600
-require:
-  publishers: [  ]
-  subscribers: [ motor_cmd_vel, shutdown ]
-</rosparam>
-	</node>
-	
-	<node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
+    <!-- base controller -->
+    <node pkg="base_controller" type="base_controller" name="base_controller" output="screen">
+        <param name="motor_max_acc" value="125.0" />
+        <param name="motor_max_vel" value="62.5" />
+    </node>
+
+    <!-- joy teleop -->
+    <node pkg="base_controller" type="base_teleop_joy" name="base_teleop_joy" />
+
+    <node pkg="base_controller" type="shutdown_controller" name="sd_controller" />
+
+    <!-- joy node -->
+    <node respawn="true" pkg="joy" type="joy_node" name="joy_node">
+        <param name="dev" type="string" value="/dev/input/js0" />
+        <param name="deadzone" value="0.12" />
+    </node>
+
+    <!-- base itself -->
+    <node pkg="rosserial_server" type="serial_node" name="base">
+        <rosparam>
+            port: /dev/ttyUSB0
+            baud: 57600
+            require:
+            publishers: [ ]
+            subscribers: [ motor_cmd_vel, shutdown ]
+        </rosparam>
+    </node>
+
+    <node pkg="rosserial_python" type="message_info_service.py" name="rosserial_message_info" />
 </launch>

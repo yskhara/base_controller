@@ -7,7 +7,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <std_msgs/Int16MultiArray.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <math.h>
 
 class BaseController
@@ -48,7 +48,7 @@ private:
 	ros::Time targetTime;
 
 	double lastTarget[3];// = {0.0, 0.0, 0.0};
-	std_msgs::Int16MultiArray motorCmdVel_msg;
+	std_msgs::Float32MultiArray motorCmdVel_msg;
 
 	//static constexpr double WheelDiameter = 0.127; // in metre
 	//static constexpr double MachineRadius = 0.500; // in metre
@@ -62,7 +62,7 @@ BaseController::BaseController(void)
 
 	_nh.param("motor_max_acc", this->MaximumAcceleration, 0.0);
 	_nh.param("motor_max_vel", this->MaximumVelocity, 0.0);
-	_nh.param("motor_vel_coeff", this->VelocityCoefficient, 50.127541131);
+	_nh.param("motor_vel_coeff", this->VelocityCoefficient, 1 / 0.03);	//radian per metre for the wheels, which is equivalent to the inverse of the wheel radius
 	_nh.param("robot_radius", this->RobotRadius, 0.500);
 
 	ROS_INFO("motor_max_acc : %f", this->MaximumAcceleration);
@@ -85,11 +85,11 @@ BaseController::BaseController(void)
 	_nh.param("invert_z", this->InvertZ, false);
 
 	int ctrl_freq;
-	_nh.param("ctrl_freq", ctrl_freq, 10);
+	_nh.param("ctrl_freq", ctrl_freq, 20);
 
 	cmdVel_sub = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 10, &BaseController::CmdVelCallback, this);
 
-	motorCmdVel_pub = nh.advertise<std_msgs::Int16MultiArray>("motor_cmd_vel", 1);
+	motorCmdVel_pub = nh.advertise<std_msgs::Float32MultiArray>("motor_cmd_vel", 1);
 
 	control_tim = nh.createTimer(ros::Duration(1.0 / ctrl_freq), &BaseController::TimerCallback, this);
 
@@ -193,7 +193,7 @@ void BaseController::CalcWheelSpeed(double actualDt)
 	for(int i = 0; i < 3; i++)
 	{
 		this->lastTarget[i] = t[i];
-		this->motorCmdVel_msg.data.push_back(static_cast<int16_t>(round(t[i])));
+		this->motorCmdVel_msg.data.push_back(static_cast<float>(t[i]));
 	}
 }
 
