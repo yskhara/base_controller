@@ -73,7 +73,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   geometry_msgs#   nav_msgs#   std_msgs
+#   geometry_msgs
+#   nav_msgs
+#   std_msgs
 # )
 
 ################################################
@@ -215,5 +217,8 @@ target_link_libraries(shutdown_controller_joy ${catkin_LIBRARIES})
 
 add_executable(useless_planner src/useless_planner.cpp)
 target_link_libraries(useless_planner ${catkin_LIBRARIES})
+
+add_executable(odom_broadcaster src/odom_broadcaster.cpp)
+target_link_libraries(odom_broadcaster ${catkin_LIBRARIES})
 
 
