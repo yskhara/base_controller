@@ -28,18 +28,20 @@
 								</outputEntries>
 							</builder>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure.642608367" name="configure" superClass="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure">
-								<option id="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name.994082765" superClass="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name" value="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1587384764" valueType="string"/>
+								<option id="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name.994082765" name="Name" superClass="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name" value="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1587384764" valueType="string"/>
 							</tool>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.autogen.1396779481" name="autogen.sh" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.autogen"/>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.405850005" name="GCC C Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc">
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1858409248" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1858409248" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/opt/ros/kinetic/include"/>
+									<listOptionValue builtIn="false" value="/home/yusaku/catkin_ws/devel/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1930139826" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.365631712" name="GCC C++ Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp">
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.825294295" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.825294295" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/opt/ros/kinetic/include"/>
+									<listOptionValue builtIn="false" value="/home/yusaku/catkin_ws/devel/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1309928845" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -70,15 +72,22 @@
 					<folderInfo id="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1582811958." name="/" resourcePath="">
 						<toolChain id="org.eclipse.linuxtools.cdt.autotools.core.toolChain.debug.1776141969" name="GNU Autotools Toolchain" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolChain.debug">
 							<targetPlatform id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.targetPlatform.debug.62111682" isAbstract="false" name="GNU Autotools Target Platform" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.targetPlatform.debug"/>
-							<builder id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder.debug.557450145" name="Autotools Makefile Generator.Debug (GNU)" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder.debug"/>
+							<builder id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder.debug.557450145" keepEnvironmentInBuildfile="false" name="Autotools Makefile Generator" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.builder.debug"/>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure.debug.112941649" name="configure" superClass="org.eclipse.linuxtools.cdt.autotools.core.gnu.toolchain.tool.configure.debug">
-								<option defaultValue="CFLAGS=-g -O0" id="org.eclipse.linuxtools.cdt.autotools.core.option.configure.user.1337652763" superClass="org.eclipse.linuxtools.cdt.autotools.core.option.configure.user" valueType="string"/>
+								<option defaultValue="CFLAGS=-g -O0" id="org.eclipse.linuxtools.cdt.autotools.core.option.configure.user.1337652763" name="User-specified configuration options" superClass="org.eclipse.linuxtools.cdt.autotools.core.option.configure.user" valueType="string"/>
+								<option id="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name.1798643333" name="Name" superClass="org.eclipse.linuxtools.cdt.autotools.core.option.configure.name" value="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1582811958" valueType="string"/>
 							</tool>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.autogen.debug.232690208" name="autogen.sh" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.autogen.debug"/>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.debug.2055696695" name="GCC C Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.debug">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.519710565" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/yusaku/catkin_ws/devel/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1127486546" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.debug.574699604" name="GCC C++ Compiler" superClass="org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.debug">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.342814045" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/yusaku/catkin_ws/devel/include"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1130096592" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 						</toolChain>
@@ -93,7 +102,14 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug (GNU)">
+			<resource resourceType="PROJECT" workspacePath="/base_controller"/>
+		</configuration>
+		<configuration configurationName="Build (GNU)">
+			<resource resourceType="PROJECT" workspacePath="/base_controller"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1587384764;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1587384764.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.405850005;cdt.managedbuild.tool.gnu.c.compiler.input.1930139826">
@@ -105,6 +121,12 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1898192559;cdt.managedbuild.toolchain.gnu.base.1898192559.1216423326;cdt.managedbuild.tool.gnu.c.compiler.base.899560453;cdt.managedbuild.tool.gnu.c.compiler.input.343634119">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1582811958;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1582811958.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.debug.574699604;cdt.managedbuild.tool.gnu.cpp.compiler.input.1130096592">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1582811958;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.1582811958.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.debug.2055696695;cdt.managedbuild.tool.gnu.c.compiler.input.1127486546">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.base.1898192559;cdt.managedbuild.toolchain.gnu.base.1898192559.1216423326;cdt.managedbuild.tool.gnu.cpp.compiler.base.1357083917;cdt.managedbuild.tool.gnu.cpp.compiler.input.668601803">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
@@ -112,4 +134,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

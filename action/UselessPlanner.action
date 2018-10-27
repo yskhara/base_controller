@@ -1,0 +1,4 @@
+nav_msgs/Path target_path
+---
+---
+geometry_msgs/PoseStamped base_position
