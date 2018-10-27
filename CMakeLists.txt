@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   tf2
+  message_generation
+  actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -64,19 +66,19 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+ add_action_files(
+   FILES
+   UselessPlanner.action
+ )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   geometry_msgs
-#   nav_msgs
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   actionlib_msgs
+   std_msgs
+   geometry_msgs
+   nav_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -218,7 +220,10 @@ target_link_libraries(shutdown_controller_joy ${catkin_LIBRARIES})
 add_executable(useless_planner src/useless_planner.cpp)
 target_link_libraries(useless_planner ${catkin_LIBRARIES})
 
-add_executable(odom_broadcaster src/odom_broadcaster.cpp)
-target_link_libraries(odom_broadcaster ${catkin_LIBRARIES})
+add_executable(crude_planner src/crude_planner.cpp)
+target_link_libraries(crude_planner ${catkin_LIBRARIES})
+
+add_executable(odom_publisher src/odom_publisher.cpp)
+target_link_libraries(odom_publisher ${catkin_LIBRARIES})
 
 
