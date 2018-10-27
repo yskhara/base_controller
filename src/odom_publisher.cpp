@@ -59,9 +59,9 @@ OdomBroadcaster::OdomBroadcaster(void)
     odom_y_sub = nh.subscribe<std_msgs::Float64>("odom/y", 10, &OdomBroadcaster::odomYCallback, this);
 
 #ifdef PUBLISH_ODOM
-    odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 1);
+    odom_pub = nh.advertise<nav_msgs::Odometry>("odom_pose", 1);
 #else
-    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("odom", 1);
+    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("odom_pose", 1);
 #endif
 
     _nh.param<std::string>("odom_frame", odom_frame, "odom");
