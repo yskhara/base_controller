@@ -19,10 +19,10 @@
 #include <tf/transform_listener.h>
 #include <math.h>
 
-#include <base_controller/UselessPlannerAction.h>
-#include <actionlib/server/simple_action_server.h>
+//#include <base_controller/UselessPlannerAction.h>
+//#include <actionlib/server/simple_action_server.h>
 
-typedef actionlib::SimpleActionServer<base_controller::UselessPlannerAction> Server;
+//typedef actionlib::SimpleActionServer<base_controller::UselessPlannerAction> Server;
 
 class BSplineSegment
 {
@@ -139,7 +139,7 @@ public:
 
     //void SetMaximumAcceleration(double acc);
     //void SetMaximumVelocity(double vel);
-    void execute_action(const base_controller::UselessPlannerActionGoalConstPtr& goal, Server* as);
+    //void execute_action(const base_controller::UselessPlannerActionGoalConstPtr& goal, Server* as);
 
 private:
     void PathCallback(const nav_msgs::Path::ConstPtr& msg);
@@ -167,10 +167,10 @@ private:
     }
 
     ros::NodeHandle nh_;
-    actionlib::SimpleActionServer<base_controller::UselessPlannerAction> as_;
+    //actionlib::SimpleActionServer<base_controller::UselessPlannerAction> as_;
     std::string action_name_;
-    base_controller::UselessPlannerActionFeedback feedback_;
-    base_controller::UselessPlannerActionResult result_;
+    //base_controller::UselessPlannerActionFeedback feedback_;
+    //base_controller::UselessPlannerActionResult result_;
 
     double vel_lim_lin;
     double vel_lim_ang;
@@ -239,8 +239,8 @@ private:
     int current_waypoint_index = 0;
 };
 
-UselessPlanner::UselessPlanner(std::string name) :
-        as_(nh_, name, false), action_name_(name)
+UselessPlanner::UselessPlanner(std::string name)// :
+//        as_(nh_, name, false), action_name_(name)
 {
     auto private_nh = ros::NodeHandle("~/UselessPlanner");
     //this->base_max_vel_lin = 1.0;
@@ -365,10 +365,12 @@ UselessPlanner::UselessPlanner(std::string name) :
 #endif
 }
 
+/*
 void UselessPlanner::execute_action(const base_controller::UselessPlannerActionGoalConstPtr& goal, Server* as)
 {
 
 }
+*/
 
 void UselessPlanner::PathCallback(const nav_msgs::Path::ConstPtr& msg)
 {
