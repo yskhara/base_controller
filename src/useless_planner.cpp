@@ -213,7 +213,7 @@ private:
     ros::Publisher goal_reached_pub;
     ros::Publisher cmd_vel_pub;
     ros::Publisher fine_path_pub;
-    ros::Publisher path_pub;
+    //ros::Publisher path_pub;
     ros::Timer control_tim;
 
     tf::TransformListener _tflistener;
@@ -309,9 +309,9 @@ UselessPlanner::UselessPlanner(std::string name) :
     //Server server(uselessPlanner->nh, "do_dishes", boost::bind(&UselessPlanner::execute_action, uselessPlanner, _1, &server), false);
     //server.start();
 
-//#if 0
+#if 0
 
-    path_pub = nh_.advertise<nav_msgs::Path>("target_path", 1, true);
+    //path_pub = nh_.advertise<nav_msgs::Path>("target_path", 1, true);
 
     target_path.header.frame_id = "map";
     target_path.header.stamp = ros::Time::now();
@@ -362,7 +362,7 @@ UselessPlanner::UselessPlanner(std::string name) :
 
     target_path.poses = _poses;
     path_pub.publish(target_path);
-//#endif
+#endif
 }
 
 void UselessPlanner::execute_action(const base_controller::UselessPlannerActionGoalConstPtr& goal, Server* as)
