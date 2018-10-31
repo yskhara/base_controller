@@ -572,8 +572,9 @@ void UselessPlanner::AbortCallback(const std_msgs::Bool::ConstPtr& msg)
 
 void UselessPlanner::TimerCallback(const ros::TimerEvent& event)
 {
-    if (target_path.poses.size() <= 0)
+    if (fine_target_path.poses.size() <= 0l)
     {
+        ROS_INFO("paths size: %ld", fine_target_path.poses.size());
         this->planning = false;
         current_goal_index = 0;
     }
