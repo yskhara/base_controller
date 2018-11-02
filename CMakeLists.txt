@@ -211,6 +211,9 @@ target_link_libraries(base_controller ${catkin_LIBRARIES})
 add_executable(base_teleop_joy src/base_teleop_joy.cpp)
 target_link_libraries(base_teleop_joy ${catkin_LIBRARIES})
 
+add_executable(base_teleop_joy_assisted src/base_teleop_joy_assisted.cpp)
+target_link_libraries(base_teleop_joy_assisted ${catkin_LIBRARIES})
+
 add_executable(shutdown_controller src/shutdown_controller.cpp)
 target_link_libraries(shutdown_controller ${catkin_LIBRARIES})
 
