@@ -136,7 +136,7 @@ void BaseTeleop::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         vel_world_y = -joy->axes[AxisLeftThumbX];
     }
 
-    double theta = last_pose_msg.theta;
+    double theta = -last_pose_msg.theta;
     double vel_local_x = +(vel_world_x * cos(theta)) + (vel_world_y * sin(theta));
     double vel_local_y = -(vel_world_x * sin(theta)) + (vel_world_y * cos(theta));
 
