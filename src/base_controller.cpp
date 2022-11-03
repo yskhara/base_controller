@@ -159,7 +159,7 @@ void BaseController::CalcWheelSpeed(double actualDt)
 			if(_a * _k > this->MaximumVelocity)
 			{
 				_k = this->MaximumVelocity / _a;
-                ROS_WARN("An infeasible velocity command detected! You might want to look into it.");
+                //ROS_WARN("An infeasible velocity command detected! You might want to look into it.");
 			}
 		}
 
@@ -182,7 +182,7 @@ void BaseController::CalcWheelSpeed(double actualDt)
 			{
 				_k = maxVelDelta / diffabs;
 
-				ROS_WARN("An infeasible acceleration detected! You might want to look into it.");
+				//ROS_WARN("An infeasible acceleration detected! You might want to look into it.");
 			}
 		}
 
